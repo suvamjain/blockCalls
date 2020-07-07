@@ -25,7 +25,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.suvamjain.blockcalls.AppConstants;
+import com.suvamjain.blockcalls.AppModule;
+import com.suvamjain.blockcalls.DaggerAppComponent;
 import com.suvamjain.blockcalls.R;
+import com.suvamjain.blockcalls.RoomModule;
 import com.suvamjain.blockcalls.adapter.BlockedContactListAdapter;
 import com.suvamjain.blockcalls.model.Contact;
 import com.suvamjain.blockcalls.repository.ContactRepository;
@@ -33,6 +36,8 @@ import com.suvamjain.blockcalls.util.RecyclerItemClickListener;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import static android.Manifest.permission.CALL_PHONE;
 import static android.Manifest.permission.MODIFY_PHONE_STATE;
@@ -51,7 +56,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FloatingActionButton floatingActionButton;
 
     private List<Contact> mContacts;
-    private ContactRepository contactRepository;
+
+    @Inject
+    public ContactRepository contactRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +67,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        contactRepository = new ContactRepository(getApplicationContext());
+        DaggerAppComponent.builder()
+                .appModule(new AppModule(getApplication()))
+                .roomModule(new RoomModule(getApplication()))
+                .build()
+                .inject(this);
+
         mContacts = new ArrayList<>();
 
         recyclerView = findViewById(R.id.contact_list);

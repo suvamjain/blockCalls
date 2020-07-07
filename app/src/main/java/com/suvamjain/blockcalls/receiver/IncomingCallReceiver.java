@@ -2,6 +2,7 @@ package com.suvamjain.blockcalls.receiver;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -19,12 +20,17 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.android.internal.telephony.ITelephony;
+import com.suvamjain.blockcalls.AppModule;
+import com.suvamjain.blockcalls.DaggerAppComponent;
 import com.suvamjain.blockcalls.R;
+import com.suvamjain.blockcalls.RoomModule;
 import com.suvamjain.blockcalls.model.Contact;
 import com.suvamjain.blockcalls.repository.ContactRepository;
 import com.suvamjain.blockcalls.ui.MainActivity;
 
 import java.lang.reflect.Method;
+
+import javax.inject.Inject;
 
 public class IncomingCallReceiver extends BroadcastReceiver {
 
@@ -38,7 +44,8 @@ public class IncomingCallReceiver extends BroadcastReceiver {
 
     private static final int NOTIFY_REJECTED = 0;
 
-    private ContactRepository contactRepository;
+    @Inject
+    public ContactRepository contactRepository;
 
     @Override
     public void onReceive(final Context context, Intent intent) {
@@ -64,7 +71,11 @@ public class IncomingCallReceiver extends BroadcastReceiver {
         state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
         Log.d(TAG, "Incoming number: " + incomingNumber);
 
-        contactRepository = new ContactRepository(context);
+        DaggerAppComponent.builder()
+                .appModule(new AppModule((Application)context.getApplicationContext()))
+                .roomModule(new RoomModule((Application)context.getApplicationContext()))
+                .build()
+                .injectReceiver(this);
 
         new notifyAsyncTask().execute(context);
     }
@@ -74,7 +85,6 @@ public class IncomingCallReceiver extends BroadcastReceiver {
         protected Void doInBackground(Context... params) {
             Log.i(TAG, "Notify async started");
             Contact contact = contactRepository.getContactByNumber(incomingNumber.substring(3));
-            Log.e("Incoming call " , contact.getName());
             if( contact != null) {
                 breakCall(params[0], contact);
             }
@@ -150,7 +160,8 @@ public class IncomingCallReceiver extends BroadcastReceiver {
         }
 
         Notification notify = new NotificationCompat.Builder(context, "M_CH_ID")
-                .setSmallIcon(R.drawable.ic_call)
+                .setSmallIcon(R.drawable.ic_block_icon)
+                .setColor(context.getResources().getColor(R.color.bg_lock))
                 .setContentTitle(context.getString(R.string.receiver_notify_call_rejected))
                 .setContentText(person != null ? person.getName() + " : " + person.getNumber(): context.getString(R.string.receiver_notify_private_number))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
