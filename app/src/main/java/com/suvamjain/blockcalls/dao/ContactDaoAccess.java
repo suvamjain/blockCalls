@@ -11,6 +11,8 @@ import com.suvamjain.blockcalls.model.Contact;
 
 import java.util.List;
 
+import io.reactivex.Single;
+
 @Dao
 public interface ContactDaoAccess {
 
@@ -27,17 +29,21 @@ public interface ContactDaoAccess {
 
 
     @Query("SELECT * FROM Contact WHERE number =:phNumber")
-    Contact getContactByNumber(String phNumber);
+    Single<Contact> getContactByNumber(String phNumber);
+
+
+    @Query("UPDATE Contact SET calls = calls + 1 WHERE id =:contactId")
+    int findAndUpdateCount(int contactId);
 
 
     @Update
-    void updateContact(Contact contact);
+    int updateContact(Contact contact);
 
 
     @Delete
-    void deleteContact(Contact contact);
+    int deleteContact(Contact contact);
 
 
     @Query("DELETE FROM Contact")
-    void deleteAllContacts();
+    int deleteAllContacts();
 }

@@ -13,6 +13,7 @@ public class Contact implements Serializable {
 
     private String name;
     private String number;
+    private int calls = 0;
 
     public int getId() {
         return id;
@@ -38,8 +39,11 @@ public class Contact implements Serializable {
         this.number = number;
     }
 
-//    @Override
-//    public boolean equals(@Nullable Object obj) {
-//        return number.equals(((Contact)obj).getNumber());
-//    }
+    public int getCalls() {
+        return calls;
+    }
+
+    public void setCalls(int calls) {
+        this.calls = calls;
+    }
 }

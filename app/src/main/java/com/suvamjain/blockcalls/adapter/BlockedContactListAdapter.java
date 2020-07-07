@@ -1,5 +1,6 @@
 package com.suvamjain.blockcalls.adapter;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
@@ -17,9 +18,11 @@ import java.util.List;
 public class BlockedContactListAdapter extends RecyclerView.Adapter<BlockedContactListAdapter.ContactViewHolder> {
 
     private List<Contact> contacts;
+    private Context context;
 
-    public BlockedContactListAdapter(List<Contact> contacts) {
+    public BlockedContactListAdapter(Context context, List<Contact> contacts) {
         this.contacts = contacts;
+        this.context = context;
     }
 
     @NonNull
@@ -35,6 +38,7 @@ public class BlockedContactListAdapter extends RecyclerView.Adapter<BlockedConta
 
         holder.itemName.setText(contact.getName());
         holder.itemNumber.setText(contact.getNumber());
+        holder.itemCount.setText(context.getResources().getString(R.string.call_count, contact.getCalls()));
     }
 
     @Override
@@ -56,12 +60,13 @@ public class BlockedContactListAdapter extends RecyclerView.Adapter<BlockedConta
 
     protected class ContactViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView itemName, itemNumber;
+        private TextView itemName, itemNumber, itemCount;
 
         public ContactViewHolder(View itemView) {
             super(itemView);
             itemName = itemView.findViewById(R.id.item_name);
             itemNumber = itemView.findViewById(R.id.item_number);
+            itemCount = itemView.findViewById(R.id.item_count);
         }
     }
 }

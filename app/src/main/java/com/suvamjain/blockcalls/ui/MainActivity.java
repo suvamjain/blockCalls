@@ -34,10 +34,19 @@ import com.suvamjain.blockcalls.model.Contact;
 import com.suvamjain.blockcalls.repository.ContactRepository;
 import com.suvamjain.blockcalls.util.RecyclerItemClickListener;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import io.reactivex.Completable;
+import io.reactivex.CompletableObserver;
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
+import io.reactivex.internal.observers.SubscriberCompletableObserver;
+import io.reactivex.schedulers.Schedulers;
 
 import static android.Manifest.permission.CALL_PHONE;
 import static android.Manifest.permission.MODIFY_PHONE_STATE;
@@ -55,8 +64,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private BlockedContactListAdapter blockedContactListAdapter;
     private FloatingActionButton floatingActionButton;
 
-    private List<Contact> mContacts;
-
     @Inject
     public ContactRepository contactRepository;
 
@@ -72,8 +79,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .roomModule(new RoomModule(getApplication()))
                 .build()
                 .inject(this);
-
-        mContacts = new ArrayList<>();
 
         recyclerView = findViewById(R.id.contact_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
@@ -97,10 +102,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if(contacts.size() > 0) {
                     emptyView.setVisibility(View.GONE);
                     recyclerView.setVisibility(View.VISIBLE);
-                    mContacts.clear();
-                    mContacts.addAll(contacts);
                     if(blockedContactListAdapter == null) {
-                        blockedContactListAdapter = new BlockedContactListAdapter(contacts);
+                        blockedContactListAdapter = new BlockedContactListAdapter(getApplicationContext(), contacts);
                         recyclerView.setAdapter(blockedContactListAdapter);
                     }
                     else {
@@ -109,7 +112,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 else {
                     updateEmptyView();
-                    mContacts.clear();
                 }
             }
         });
@@ -195,34 +197,92 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             //update or delete operation
             if (data.hasExtra(INTENT_CONTACT)) {
-                Contact ct = (Contact) data.getSerializableExtra(INTENT_CONTACT);
+                final Contact ct = (Contact) data.getSerializableExtra(INTENT_CONTACT);
                 if (data.hasExtra(INTENT_DELETE)) {
-                    contactRepository.deleteContact(ct);
-                } else {
-                    contactRepository.updateContact(ct);
+                    //delete contact
+                    contactRepository.deleteContact(ct)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new SingleObserver<Integer>() {
+                            @Override
+                            public void onSubscribe(Disposable d) {
+
+                            }
+
+                            @Override
+                            public void onSuccess(Integer integer) {
+                                Log.e(TAG, "Deleted successfully -> " + integer);
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                Log.e(TAG, "Error while deleting " + e.getMessage());
+                            }
+                        });
+                }
+                else {
+                    //update contact
+                    contactRepository.updateContact(ct)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new SingleObserver<Integer>() {
+                            @Override
+                            public void onSubscribe(Disposable d) {
+
+                            }
+
+                            @Override
+                            public void onSuccess(Integer integer) {
+                                Log.e(TAG, "Updated successfully -> " + integer);
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                Log.e(TAG, "Error while updating " + e.getMessage());
+                            }
+                        });
                 }
             }
             //insert operation
             else {
                 final String name = data.getStringExtra(INTENT_NAME);
                 final String number = data.getStringExtra(INTENT_NUMBER);
-                new AsyncTask<Void, Void, Contact>() {
-                    @Override
-                    protected Contact doInBackground(Void... voids) {
-                        return contactRepository.getContactByNumber(number);
-                    }
 
-                    @Override
-                    protected void onPostExecute(Contact contact) {
-                        super.onPostExecute(contact);
-                        if (contact == null) {
-                            contactRepository.insertContact(name, number);
-                        } else {
-                            Log.e(TAG, "Results --->" + contact.toString());
+                //insert contact if number not exists
+                contactRepository.getContactByNumber(number)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new SingleObserver<Contact>() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+
+                        }
+
+                        @Override
+                        public void onSuccess(Contact contact) {
+                            Log.e(TAG, "Error: Contact already exists with name -> " + contact.getName());
                             Toast.makeText(MainActivity.this, "Number already in block list", Toast.LENGTH_SHORT).show();
                         }
-                    }
-                }.execute();
+
+                        @Override
+                        public void onError(Throwable e) {
+                            Log.e(TAG, "Contact not exists, inserting user");
+                            contactRepository.insertContact(name, number)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(new Action() {
+                                    @Override
+                                    public void run() throws Exception {
+                                        Log.e(TAG, "Inserted successfully");
+                                    }
+                                }, new Consumer<Throwable>() {
+                                    @Override
+                                    public void accept(Throwable throwable) throws Exception {
+                                        Log.e(TAG, "Error while inserting");
+                                    }
+                                });
+                        }
+                    });
                 updateContactList();
             }
         }
@@ -230,7 +290,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
@@ -243,7 +302,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return true;
             }
             case R.id.action_clear: {
-                contactRepository.deleteAllContacts();
+                contactRepository.deleteAllContacts()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new SingleObserver<Integer>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(Integer integer) {
+                        Log.e(TAG, "Deleted -> " + integer + " contacts successfully");
+                        Toast.makeText(MainActivity.this, "Deleted " + integer + " contacts successfully",
+                                Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(TAG, "Error while deleting: " + e.getMessage());
+                    }
+                });
                 return true;
             }
         }

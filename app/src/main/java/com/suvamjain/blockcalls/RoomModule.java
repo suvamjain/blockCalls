@@ -20,7 +20,9 @@ public class RoomModule {
     private String DB_NAME="db_block_calls";
 
     public RoomModule(Application mApplication) {
-        contactDatabase = Room.databaseBuilder(mApplication, ContactDatabase.class, DB_NAME).build();
+        contactDatabase = Room.databaseBuilder(mApplication, ContactDatabase.class, DB_NAME)
+                .fallbackToDestructiveMigration()
+                .build();
     }
 
     @Singleton

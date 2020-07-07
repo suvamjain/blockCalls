@@ -1,7 +1,6 @@
 package com.suvamjain.blockcalls.repository;
 
 import android.arch.lifecycle.LiveData;
-import android.os.AsyncTask;
 
 import com.suvamjain.blockcalls.dao.ContactDaoAccess;
 import com.suvamjain.blockcalls.model.Contact;
@@ -9,6 +8,12 @@ import com.suvamjain.blockcalls.model.Contact;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import io.reactivex.Completable;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
+import io.reactivex.functions.Action;
 
 public class ContactDataSource implements ContactRepository {
 
@@ -20,70 +25,64 @@ public class ContactDataSource implements ContactRepository {
     }
 
     @Override
-    public void insertContact(String name, String number) {
+    public Completable insertContact(String name, String number) {
         Contact contact = new Contact();
         contact.setName(name);
         contact.setNumber(number);
 
-        insertContact(contact);
+        return insertContact(contact);
     }
 
     @Override
-    public void insertContact(final Contact contact) {
-        new AsyncTask<Void, Void, Void>() {
+    public Completable insertContact(final Contact contact) {
+        return Completable.fromAction(new Action() {
             @Override
-            protected Void doInBackground(Void... voids) {
+            public void run() throws Exception {
                 contactDaoAccess.insertContact(contact);
-                return null;
             }
-        }.execute();
+        });
     }
 
     @Override
-    public void updateContact(final Contact contact) {
-        new AsyncTask<Void, Void, Void>() {
+    public Single<Integer> updateContact(final Contact contact) {
+        return Single.create(new SingleOnSubscribe<Integer>() {
             @Override
-            protected Void doInBackground(Void... voids) {
-                contactDaoAccess.updateContact(contact);
-                return null;
+            public void subscribe(SingleEmitter<Integer> emitter) throws Exception {
+                int res = contactDaoAccess.updateContact(contact);
+                if(res > 0)
+                    emitter.onSuccess(res);
+                else
+                    emitter.onError(new Throwable("No contact updated"));
             }
-        }.execute();
+        });
     }
 
     @Override
-    public void deleteContact(int id) {
-        final LiveData<Contact> contact = getContact(id);
-        if(contact != null) {
-            new AsyncTask<Void, Void, Void>() {
-                @Override
-                protected Void doInBackground(Void... voids) {
-                    contactDaoAccess.deleteContact(contact.getValue());
-                    return null;
-                }
-            }.execute();
-        }
-    }
-
-    @Override
-    public void deleteContact(final Contact contact) {
-        new AsyncTask<Void, Void, Void>() {
+    public Single<Integer> deleteContact(final Contact contact) {
+        return Single.create(new SingleOnSubscribe<Integer>() {
             @Override
-            protected Void doInBackground(Void... voids) {
-                contactDaoAccess.deleteContact(contact);
-                return null;
+            public void subscribe(SingleEmitter<Integer> emitter) throws Exception {
+                int res = contactDaoAccess.deleteContact(contact);
+                if(res > 0)
+                    emitter.onSuccess(res);
+                else
+                    emitter.onError(new Throwable("No contact deleted"));
             }
-        }.execute();
+        });
     }
 
     @Override
-    public void deleteAllContacts() {
-        new AsyncTask<Void, Void, Void>() {
+    public Single<Integer> deleteAllContacts() {
+        return Single.create(new SingleOnSubscribe<Integer>() {
             @Override
-            protected Void doInBackground(Void... voids) {
-                contactDaoAccess.deleteAllContacts();
-                return null;
+            public void subscribe(SingleEmitter<Integer> emitter) throws Exception {
+                int res = contactDaoAccess.deleteAllContacts();
+                if(res > 0)
+                    emitter.onSuccess(res);
+                else
+                    emitter.onError(new Throwable("No contacts deleted"));
             }
-        }.execute();
+        });
     }
 
     @Override
@@ -92,8 +91,18 @@ public class ContactDataSource implements ContactRepository {
     }
 
     @Override
-    public Contact getContactByNumber(String phNumber) {
+    public Single<Contact> getContactByNumber(String phNumber) {
         return contactDaoAccess.getContactByNumber(phNumber);
+    }
+
+    @Override
+    public Completable findAndUpdateCount(final int id) {
+        return Completable.fromAction(new Action() {
+            @Override
+            public void run() throws Exception {
+                contactDaoAccess.findAndUpdateCount(id);
+            }
+        });
     }
 
     @Override

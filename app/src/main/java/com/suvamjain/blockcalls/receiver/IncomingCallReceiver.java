@@ -11,7 +11,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -31,6 +30,13 @@ import com.suvamjain.blockcalls.ui.MainActivity;
 import java.lang.reflect.Method;
 
 import javax.inject.Inject;
+
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 public class IncomingCallReceiver extends BroadcastReceiver {
 
@@ -77,19 +83,44 @@ public class IncomingCallReceiver extends BroadcastReceiver {
                 .build()
                 .injectReceiver(this);
 
-        new notifyAsyncTask().execute(context);
-    }
+        if(incomingNumber.length() > 10)
+            incomingNumber = incomingNumber.substring(incomingNumber.length() - 10);
 
-    private class notifyAsyncTask extends AsyncTask<Context, Void, Void> {
-        @Override
-        protected Void doInBackground(Context... params) {
-            Log.i(TAG, "Notify async started");
-            Contact contact = contactRepository.getContactByNumber(incomingNumber.substring(3));
-            if( contact != null) {
-                breakCall(params[0], contact);
-            }
-            return null;
-        }
+        contactRepository.getContactByNumber(incomingNumber)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new SingleObserver<Contact>() {
+                @Override
+                public void onSubscribe(Disposable d) {
+
+                }
+
+                @Override
+                public void onSuccess(final Contact contact) {
+                    Log.e(TAG, "Contact found in list with name -> " + contact.getName());
+                    breakCall(context, contact);
+                    //update the count of calls
+                    contactRepository.findAndUpdateCount(contact.getId())
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Action() {
+                            @Override
+                            public void run() throws Exception {
+                                Log.e(TAG, "Count updated");
+                            }
+                        },new Consumer<Throwable>() {
+                            @Override
+                            public void accept(Throwable throwable) throws Exception {
+                                Log.e(TAG, "Error while updating count");
+                            }
+                        });
+                }
+
+                @Override
+                public void onError(Throwable e) {
+
+                }
+            });
     }
 
     private void breakCallNougatAndLower(Context context) {
@@ -139,7 +170,6 @@ public class IncomingCallReceiver extends BroadcastReceiver {
         else {
             breakCallNougatAndLower(context);
         }
-
     }
 
     private boolean checkCallPhonePermission(Context context) {

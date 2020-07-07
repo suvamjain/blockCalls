@@ -6,23 +6,26 @@ import com.suvamjain.blockcalls.model.Contact;
 
 import java.util.List;
 
+import io.reactivex.Completable;
+import io.reactivex.Single;
+
 public interface ContactRepository {
 
-    void insertContact(String name, String number);
+    Completable insertContact(String name, String number);
 
-    void insertContact(final Contact contact);
+    Completable insertContact(Contact contact);
 
-    void updateContact(final Contact contact);
+    Single<Integer> updateContact(Contact contact);
 
-    void deleteContact(final int id);
+    Single<Integer> deleteContact(Contact contact);
 
-    void deleteContact(final Contact contact);
-
-    void deleteAllContacts();
+    Single<Integer> deleteAllContacts();
 
     LiveData<Contact> getContact(int id);
 
-    Contact getContactByNumber(String phNumber);
+    Single<Contact> getContactByNumber(String phNumber);
+
+    Completable findAndUpdateCount(int id);
 
     LiveData<List<Contact>> getContacts();
 
