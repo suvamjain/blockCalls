@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">BlockCalls</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="receiver_notify_call_rejected">Call Rejected</string>
+    <string name="receiver_notify_private_number">Private Number</string>
+
+    <string name="blocked_contacts">Blocked Contacts</string>
+    <string name="add_contact">Add new contact</string>
+    <string name="edit_contact">Edit contact</string>
+    <string name="btn_done">Done</string>
+    <string name="edit_name">Name</string>
+    <string name="edit_number">Ph No (10 digits)</string>
+    <string name="item_contact">View contact</string>
+    <string name="empty_contacts">Once you add some contacts\nyou will find it here</string>
+    <string name="auto_start_note">Note: For Xiaomi, OnePlus, Huwaei, Vivo and Oppo devices, enable the Auto-start Permissions for this app</string>
+</resources>

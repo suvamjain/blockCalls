@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_layout">
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:fitsSystemWindows="true"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <android.support.design.widget.CollapsingToolbarLayout
+            android:id="@+id/collapsingToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/white"
+            android:backgroundTint="@android:color/white"
+            android:fitsSystemWindows="true"
+            app:contentScrim="?attr/colorPrimary"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed">
+
+            <ImageView
+                android:id="@+id/btn_close"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_vertical|left"
+                android:paddingBottom="@dimen/padding"
+                android:paddingLeft="@dimen/padding_large"
+                android:paddingRight="@dimen/padding"
+                android:paddingTop="@dimen/padding"
+                android:src="@drawable/ic_cancel" />
+
+            <com.an.customfontview.CustomTextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginRight="@dimen/margin_large"
+                android:layout_marginTop="-2dp"
+                android:gravity="center"
+                android:text="@string/add_contact"
+                android:textColor="@color/layout_title"
+                android:textSize="@dimen/font_xlarge"
+                app:textFontPath="fonts/montserrat_light.otf" />
+
+
+            <com.an.customfontview.CustomTextView
+                android:id="@+id/btn_done"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|right"
+                android:gravity="center_vertical|right"
+                android:paddingBottom="@dimen/padding"
+                android:paddingLeft="@dimen/padding"
+                android:paddingRight="@dimen/margin_large"
+                android:paddingTop="@dimen/padding"
+                android:text="@string/btn_done"
+                android:textColor="@color/btn_done_color"
+                android:textSize="@dimen/font_medium"
+                app:textFontPath="fonts/montserrat_regular.otf" />
+
+            <View
+                android:id="@+id/line"
+                android:layout_width="match_parent"
+                android:layout_height="0.3dp"
+                android:layout_marginTop="@dimen/margin_xxxxxxxxlarge"
+                android:background="@color/line" />
+
+        </android.support.design.widget.CollapsingToolbarLayout>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <LinearLayout
+        android:id="@+id/test"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/margin_xxxxlarge"
+        android:paddingLeft="@dimen/margin_large"
+        android:paddingRight="@dimen/margin_large"
+        android:paddingTop="@dimen/margin_xxlarge"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <com.an.customfontview.CustomEditText
+            android:id="@+id/edit_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:hint="@string/edit_name"
+            android:singleLine="true"
+            android:inputType="textCapSentences"
+            android:textColor="@color/edit_title"
+            android:textCursorDrawable="@drawable/cursor_black"
+            android:textSize="@dimen/font_medium_large"
+            app:editFontPath="fonts/montserrat_regular.otf" />
+
+        <com.an.customfontview.CustomEditText
+            android:id="@+id/edit_number"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/margin_large"
+            android:layout_marginTop="@dimen/margin_xxxxlarge"
+            android:background="@android:color/transparent"
+            android:hint="@string/edit_number"
+            android:singleLine="true"
+            android:inputType="phone"
+            android:maxLength="10"
+            android:textColor="@color/edit_title"
+            android:textCursorDrawable="@drawable/cursor_black"
+            android:textSize="@dimen/font_medium_large"
+            app:editFontPath="fonts/montserrat_regular.otf" />
+
+    </LinearLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/select_contact"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="@dimen/margin_xxlarge"
+        android:layout_marginRight="@dimen/margin_xlarge"
+        android:elevation="4dp"
+        android:src="@drawable/ic_contact"
+        android:tint="@android:color/white"
+        app:backgroundTint="@color/fab_color"
+        app:borderWidth="2dp"
+        app:fabSize="normal"
+        app:layout_anchor="@id/test"
+        app:layout_anchorGravity="bottom|end" />
+
+</android.support.design.widget.CoordinatorLayout>
